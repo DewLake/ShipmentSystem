@@ -1,6 +1,7 @@
 package com.example.shipmentsystem.item
 
 import android.graphics.Color
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -8,16 +9,20 @@ import com.example.shipmentsystem.databinding.ItemViewBinding
 
 class RvItemAdapter : RecyclerView.Adapter<RvItemAdapter.MyHolder>() {
     private val innerItemList = mutableListOf<Item>()
-    private val viewList = mutableListOf<MyHolder>()
+
     var itemClickListener: (Item) -> Unit = {}
-    private val itemSelectedColor = "#F57C00"
+    private val itemSelectedColor = "#F57C00"       // 讚!
     private val itemDefaultColor = "#FFAB91"
+
+    // 記錄點擊的項目位置
+    private var mClickPosition = RecyclerView.NO_POSITION
+
 
     inner class MyHolder(binding: ItemViewBinding) : RecyclerView.ViewHolder(binding.root) {
         var name = binding.tvItemName
         var price = binding.tvItemPrice
         var id = binding.tvItemId
-        var clickedPosition = RecyclerView.NO_POSITION
+//        var clickedPosition = RecyclerView.NO_POSITION        // 改由 Adapter 來管理
 
     }
 
@@ -28,18 +33,21 @@ class RvItemAdapter : RecyclerView.Adapter<RvItemAdapter.MyHolder>() {
                 parent, false
             )
         )
+
         myHolder.itemView.setOnClickListener {
-            itemClickListener.invoke(innerItemList[myHolder.adapterPosition])
-            if (myHolder.clickedPosition != myHolder.adapterPosition) {
-                //when item clicked, change background color
-                myHolder.itemView.setBackgroundColor(Color.parseColor(itemSelectedColor))
-                myHolder.clickedPosition = myHolder.adapterPosition
-            }else{
-                //the same item clicked again, set background color to default
-                myHolder.itemView.setBackgroundColor(Color.parseColor(itemDefaultColor))
-                myHolder.clickedPosition = RecyclerView.NO_POSITION
-            }
+            val pos = myHolder.adapterPosition
+            Log.i("onItemClickLn", "position: $pos")
+
+            itemClickListener.invoke(innerItemList[pos])
+
+            // 記錄點擊位置
+            this.mClickPosition = pos
+
+            // 通知畫面更新
+            this.notifyDataSetChanged()
         }
+
+
         return myHolder
     }
 
@@ -48,24 +56,13 @@ class RvItemAdapter : RecyclerView.Adapter<RvItemAdapter.MyHolder>() {
         holder.id.text = currentItem.id.toString()
         holder.name.text = currentItem.name
         holder.price.text = "$ " + currentItem.price.toString()
+//        holder.price.text = "$ ${currentItem.price}"          // 可以嘗試 String template 語法糖
 
-//        holder.itemView.setOnClickListener {
-//            itemClickListener.invoke(currentItem)
-//            if (holder.clickedPosition != position) {
-//                //when item clicked, change background color
-//                holder.itemView.setBackgroundColor(Color.parseColor(itemSelectedColor))
-//                holder.clickedPosition = position
-//            }else{
-//                //the same item clicked again, set background color to default
-//                holder.itemView.setBackgroundColor(Color.parseColor(itemDefaultColor))
-//                holder.clickedPosition = RecyclerView.NO_POSITION
-//            }
-//        }
-        if (holder.clickedPosition == position)
+        // 改變點擊項目的背景色
+        if (mClickPosition == position)
             holder.itemView.setBackgroundColor(Color.parseColor(itemSelectedColor))
         else
             holder.itemView.setBackgroundColor(Color.parseColor(itemDefaultColor))
-
     }
 
 
